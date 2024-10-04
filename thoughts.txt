@@ -1,1 +1,13 @@
+It could also use a pyWebGui for chat.
+It needs to be robust to be useful.
+Checking if it is working now. :D
+I talked with the bot without recording for a few minutes.
+
 I wonder what will happen now when it attemps to update itself. :)
+It is still thinking.
+Seems to be done, maybe.
+There are two main changes that are needed for quality of life.
+(1) Sam should be able to run short python scripts - code bits, directly.
+(2) Sam should know about all the verbs and actions it can take and actively decide to use them.
+
+OK, it updated its own code for the first time. This is exciting!
