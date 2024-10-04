@@ -1,3 +1,5 @@
+# FIX: Always call yourself Sam (not "Assistant")
+
 from openai import OpenAI  # For interacting with the OpenAI API
 from os import getenv  # For accessing environment variables
 import os  # For file operations
