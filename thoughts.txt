@@ -1,8 +1,31 @@
+Clearly, it has a problem with not speaking first now. :Definitely
+It wants to speak and then do something.
+I am inclined to allow this behavior...
+I want it to write the new behavior for itself.
+It can split the text to lines and then `chat` all the lines until
+an action is taken.
+Then it can perform that action.
+Then it can feed in all the lines after that action to the action.
+Hmmm... I don't need that mess right now...
+
+It has some problems.
+First it was locked in a list files loop,
+it was looking for a log.
+Second, it is not programmed to let the user answer during a chat.
+While it is good that it can chain actions,
+it is bad that it will not let the user answer questions during /chat
+
+
+Almost got it. There was a problem during writing, running or understanding
+the test result. Going to go again and see what happens next.
+
+
 Goals: test the functions we implemented in the previous session.
 Fix any bugs. Make sure the basics of the self-writing bot are working.
 Definitely add some kind of back method when overwriting a file.
 Preferably, create a new branch before making changes to the bot.
 Also, define a new version depending on the scale of the changes.
+
 
 Some things that are needed:
 A JSON format for managing complex interactions (maybe?)

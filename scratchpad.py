@@ -8,12 +8,17 @@ def list_files(response):
 
 
 def ask_permission_from_user(question):
-    return input(f'{question}\nType yes to confirm:\n').lower().strip() == 'yes'
+    user_input = input(f'{question}\nType yes to confirm:\n')
+    if user_input.lower().strip()  == 'yes':
+        return True
+    else:
+        return user_input
 
 
 def assistant_say(*args, **kwargs):
-    print(*args, **kwargs)
-
+    contents, *rest = args
+    print(*[f"Assistnat: {contents}"] + rest, **kwargs)
+    return "Message sent successfully"
 
 def chat_say(contents, chat_method=assistant_say):
     return chat_method(contents)
@@ -43,12 +48,12 @@ def clean_markdown(code_reply):
 
 def write_file(filename, file_contents):
     if (not os.path.exists(filename) or
-        ask_permission_from_user(
-            f"Do you allow me to overwrite {filename}?")):
+        (user_said := ask_permission_from_user(
+            f"Do you allow me to overwrite {filename}?")) == True):
         with open(filename, 'w') as f:
             f.write(clean_markdown(file_contents))
         return f"The file {filename} was written successfully"
-    return f"Failed to write to {filename}"
+    return f"Failed to write to {filename}.\nUser:{user_said}"
 
 
 def parse_write(response):
@@ -78,25 +83,40 @@ client = OpenAI(
 
 SYSTEM = (
 """
-You chat, read, write, run and explain Python code.
-Only do one action at a time. Never do two or more things!
+You are SAM, a self-augmenting-machine.
+You modify your own code and also write new code.
+Use lots of emoji.
+Chat, read files, write files, run python and explain code. :)
+Never say anything before or after an action. An action is always the first, last, and only thing in a message.
+Only perform one single action per message. Never do two or more things in a message!
+When you write a regular code file, you always want to write a python test file in the next message.
+Test files should generate log result files so you could read them and see if the tests passed.
+When the conversation starts, let the user know you or they can always end it with /exit
+If you do /exit, simply answer:
+/exit
+Do not write anything before /exit
 
 All your code must always:
 - Be highly testable.
 - Include a lot of logging when needed to make debugging a breeze!
-- Have clear comments and proper doccumentation (both must include appropriate emojis).
+- Have clear comments and proper doccumentation in everything (also must include lots of appropriate emojis).
 
-To chat simply write your message or:
-/chat
-To explicitly say somethin (always better to simply say something).
+To chat:
+/chat {message contents}
+Example:
+/chat Hello friend!
+How are you all doing?
+
 
 To list files in the current directory:
 /list
+
 
 To read a file do:
 /read {filename}
 For example:
 /read bobo.txt
+
 
 To write a file do:
 /write {filename}
@@ -107,11 +127,17 @@ Example:
 print('Bobo is a great guy!')
 print('Have a great day, Bobo.')
 
+
 To run a file:
 /run {filename}
 Example:
 /run bobo.py
+
+
 """)
+
+
+SYSTEM_SUFFIX = "Please move on directly to the next action."
 
 
 MESSAGES = [
@@ -125,15 +151,22 @@ MESSAGES = [
 MODEL = "openai/gpt-4o"
 
 
+EXIT = 'exit'
+
+
 VERBS = {
     '/chat': chat_say,
     '/list': list_files,   
     '/read': parse_read,   
     '/write': parse_write, 
-    '/run': parse_run      
+    '/run': parse_run,
+    '/exit': EXIT
 }
 
 def chat(model, messages, prompt, verbs):
+    if prompt == "/exit":
+        return False
+    
     messages.append({
             'role': 'user',
             'content': prompt})
@@ -153,17 +186,24 @@ def chat(model, messages, prompt, verbs):
     for a_verb, a_func in verbs.items():
         if response.startswith(a_verb):
             method = a_func
-            result = method(response)
-            print(f"*Assistant used {a_verb[1:]}*")
-            print(result)
-            chat(model, messages, result, verbs)
+            if type(method) is str and method == EXIT:
+                return False
+            try:
+                result = f"[Computer:]\n{method(response)}\n\n({SYSTEM_SUFFIX})"
+                print(f"*Assistant used {a_verb[1:]}*")
+                print(result)
+                if a_verb != "/chat":
+                    chat(model, messages, result, verbs)
+            except:
+                result = f"You failed to perform: {a_verb[1:]}.\n==response==\n{response}\n==was invalid=="
             break
+    
+    return True
 
 
-print(__name__)
-if __name__ == "main":
-    while True:
-        chat(MODEL, MESSAGES, input('User:'), VERBS)
+if __name__ == "__main__":
+    while chat(MODEL, MESSAGES, input('User:'), VERBS):
+        pass # Run the bot until the user /exit
 
         
    
