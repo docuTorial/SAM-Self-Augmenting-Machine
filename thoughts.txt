@@ -1,3 +1,67 @@
+Some things that are needed:
+A JSON format for managing complex interactions (maybe?)
+Some safty, backup existing files before overwriting.
+Make sure old requirements remain, unless
+the user specifies they should be removed.
+Make sure code is heavily documented and testable.
+Split the project to multiple files.
+Lower temperature of the models to save time.
+
+
+I noticed that because of working with the bot, I am
+becoming more of an architect or a manager. As a coder
+I would "brute force" my way through difficulty by
+coming up with a clever hacky solution that gets
+things running as people want! I wouldn't bother with
+a more high level look at the project that much. I
+would normally dive into the details. The fine print.
+As a person, guiding a coding bot, I have to give
+clear and percise instructions. I need to ask the 
+right questions and make the right decisions or
+everything falls apart because the bot can only
+understand so much! The plan has to be great! It has
+to make sense for things to be stable, reliable and
+acceptable. This requires a different way, of high-
+level thinking I am not accustomed to, that much.
+
+So last time I ran into some problems in organization.
+The bot writes its own code and commits it to github.
+It should be much more coherent and fluent.
+I want to create a state machine with specific goals.
+A main character that chats with you about anything.
+This character is also acting like a receptionist
+or a menu. It allows the user to access other
+capabilities of the Self-Augmenting-Model-System
+The first other state is 'understanding project
+requirements', this is a preperatory stage for coding.
+It collects everything that is known about
+pre-existing requirements and the new requirements.
+It asks the user guiding questions.
+One it feels it understands the requirements,
+it asks the user to give their OK.
+Then the user can continue to discuss requirements
+or enter the coding phase.
+After the coding phase, there is a testing phase
+After that, if all tests pass,
+there is a code review on the changes
+and on the tests.
+After the code is approved during the review
+The bot will commit the changes to git
+If the code is not approved, the bot will continue
+to work with the user until things work appropriately.
+Then it returns to the main mode, where it is normal
+chat. Behind the normal chat there is a helper AI
+That detects if the user wants to enter, currently,
+only requirements mode. In the future, it will be
+detecting all kinds of user needs: such as add task.
+The bot behind the chat needs to be flexible and
+extensible so it can understand the user wants well!
+
+It is definitely more of a documentary now.
+There is much work to do tomorrow. This is getting very long for an episode.
+I should definitely add an appropriate error message if it fails because of credits.
+I might need to pay more. :D
+
 It could also use a pyWebGui for chat.
 It needs to be robust to be useful.
 Checking if it is working now. :D
