@@ -1,3 +1,9 @@
+Goals: test the functions we implemented in the previous session.
+Fix any bugs. Make sure the basics of the self-writing bot are working.
+Definitely add some kind of back method when overwriting a file.
+Preferably, create a new branch before making changes to the bot.
+Also, define a new version depending on the scale of the changes.
+
 Some things that are needed:
 A JSON format for managing complex interactions (maybe?)
 Some safty, backup existing files before overwriting.

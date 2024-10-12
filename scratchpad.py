@@ -8,7 +8,19 @@ def list_files(response):
 
 
 def ask_permission_from_user(question):
-    return input(f'{question}\ntype yes to confirm:\n').lower() == 'yes'
+    return input(f'{question}\nType yes to confirm:\n').lower().strip() == 'yes'
+
+
+def assistant_say(*args, **kwargs):
+    print(*args, **kwargs)
+
+
+def chat_say(contents, chat_method=assistant_say):
+    return chat_method(contents)
+
+
+def parse_chat(response, chat_method):
+    return chat_say(response.strip().split('/chat ')[1].strip(), chat_method)
 
 
 def read_file(filename):
@@ -17,14 +29,16 @@ def read_file(filename):
 
 
 def parse_read(response):
-    return read_file(response.split('/read ')[1])
+    return read_file(response.strip().split('/read ')[1].strip())
 
 
 def clean_markdown(code_reply):
+    PYTHON = 'python'
     if "```" in code_reply:
-        return code_reply.split("```")[1]
-    else:
-        return code_reply
+        code_reply = code_reply.split("```")[1]
+    if code_reply.startswith(PYTHON):
+        code_reply = code_reply[len(PYTHON):]
+    return code_reply
 
 
 def write_file(filename, file_contents):
@@ -39,7 +53,7 @@ def write_file(filename, file_contents):
 
 def parse_write(response):
     lines = response.splitlines()
-    filename = lines[0].split('/write ')[1]
+    filename = lines[0].strip().split('/write ')[1].strip()
     contents = '\n'.join(lines[1:])
     return write_file(filename, contents)
 
@@ -54,7 +68,7 @@ def run_file(filename):
 
 
 def parse_run(response):
-    return run_file(response.split('/run ')[1])
+    return run_file(response.strip().split('/run ')[1].strip())
 
 
 client = OpenAI(
@@ -64,19 +78,26 @@ client = OpenAI(
 
 SYSTEM = (
 """
-You write, read, run and explain Python code.
-All your code must:
-Be highly testable.
-Include a lot of logs when needed.
-Comments must include appropriate emojis.
-Include a lot of documentation.
+You chat, read, write, run and explain Python code.
+Only do one action at a time. Never do two or more things!
+
+All your code must always:
+- Be highly testable.
+- Include a lot of logging when needed to make debugging a breeze!
+- Have clear comments and proper doccumentation (both must include appropriate emojis).
+
+To chat simply write your message or:
+/chat
+To explicitly say somethin (always better to simply say something).
 
 To list files in the current directory:
 /list
+
 To read a file do:
 /read {filename}
 For example:
 /read bobo.txt
+
 To write a file do:
 /write {filename}
 {file contents}
@@ -85,6 +106,7 @@ Example:
 /write bobo.py
 print('Bobo is a great guy!')
 print('Have a great day, Bobo.')
+
 To run a file:
 /run {filename}
 Example:
@@ -104,10 +126,11 @@ MODEL = "openai/gpt-4o"
 
 
 VERBS = {
-    '/list': list_files,
-    '/read': parse_read,   # read_file,
-    '/write': parse_write, # write_file,
-    '/run': parse_run      # run_file
+    '/chat': chat_say,
+    '/list': list_files,   
+    '/read': parse_read,   
+    '/write': parse_write, 
+    '/run': parse_run      
 }
 
 def chat(model, messages, prompt, verbs):
@@ -118,28 +141,29 @@ def chat(model, messages, prompt, verbs):
     response = client.chat.completions.create(
     model=model,
     temperature=0, # This is import for accurate answers
-    top_p=0, # Similar to temperature
+    top_p=0,       # Similar to temperature
     messages=messages
     ).choices[0].message.content
     print(f'Assistant:{response}')
     messages.append({
             'role': 'assistant',
             'content': response})
-    
+
+
     for a_verb, a_func in verbs.items():
         if response.startswith(a_verb):
             method = a_func
+            result = method(response)
+            print(f"*Assistant used {a_verb[1:]}*")
+            print(result)
+            chat(model, messages, result, verbs)
             break
-    else:
-        method = None
-    if method is not None:
-        result = method(response)
-        print(result)
-        chat(model, messages, result, verbs)
 
 
-while True:
-    chat(MODEL, MESSAGES, input('User:'), VERBS)
+print(__name__)
+if __name__ == "main":
+    while True:
+        chat(MODEL, MESSAGES, input('User:'), VERBS)
 
         
    
