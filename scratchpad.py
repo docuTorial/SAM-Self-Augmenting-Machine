@@ -1,6 +1,15 @@
 from openai import OpenAI
 import os
 import subprocess
+import json
+from makelog import setup_logger
+from improved_run_file import improved_run_file
+import traceback
+
+# Configure logging
+logging = setup_logger(__name__)
+
+SHOW_COMPUTER_OUTPUT = False
 
 
 def list_files(response):
@@ -50,7 +59,7 @@ def write_file(filename, file_contents):
         (user_said := ask_permission_from_user(
             f"* Assistant wants to overwrite {filename} *")) == True):
         print(f"* Assistnat wrote {filename} *")
-        with open(filename, 'w') as f:
+        with open(filename, 'w', encoding='utf-8') as f:
             f.write(clean_markdown(file_contents))
         return f"The file {filename} was written successfully"
     return f"Failed to write to {filename}.\nUser:{user_said}"
@@ -70,11 +79,16 @@ def run_file(filename):
 
     # Use subprocess to open a new CMD window and run the Python script
     subprocess.Popen(f'start cmd /k python "{script_path}"', shell=True)
-    return f"The file {filename} was ran, please now list files and read its logs."
+    #return f"The file {filename} was ran, please now list files and read its logs."
 
 
 def parse_run(response):
-    return run_file(response.strip().split('/run ')[1].strip())
+    """
+    Runs the script twice: once for the user and once for the bot.
+    """
+    run_filename = response.strip().split('/run ')[1].strip()
+    run_file(run_filename)
+    return improved_run_file(run_filename)
 
 
 client = OpenAI(
@@ -145,7 +159,7 @@ Example:
 """)
 
 
-SYSTEM_SUFFIX = "Please move on directly to the next action."
+SYSTEM_SUFFIX = "Ask the user for guidance before you proceed."
 
 
 MESSAGES = [
@@ -175,37 +189,42 @@ def chat(model, messages, prompt, verbs):
     if prompt == "/exit":
         return False
     
-    messages.append({
+    user_message = {
             'role': 'user',
-            'content': prompt})
-    
+            'content': prompt}
+    logging.debug(json.dumps(user_message))
+    messages.append(user_message)
     response = client.chat.completions.create(
     model=model,
-    temperature=0, # This is import for accurate answers
-    top_p=0,       # Similar to temperature
+    temperature=0.1, # This is import for accurate answers
+    top_p=0.1,       # Similar to temperature
     messages=messages
     ).choices[0].message.content
 
-    messages.append({
+    assistant_reply = {
             'role': 'assistant',
-            'content': response})
-
+            'content': response}
+    logging.debug(json.dumps(assistant_reply))
+    messages.append(assistant_reply)
     for a_verb, a_func in verbs.items():
         if response.startswith(a_verb):
             method = a_func
             if type(method) is str and method == EXIT:
                 return False
+            if a_verb == "/chat":
+                method(response)
+                return True
             try:
-                if a_verb != "/chat":
-                    result = f"[Computer:]\n{method(response)}\n\n({SYSTEM_SUFFIX})"
-                    #print(f"*Assistant used {a_verb[1:]}*")
+                result = f"[Computer:]\n{method(response)}\n\n({SYSTEM_SUFFIX})"
+                print(f"*Assistant used {a_verb[1:]}*")
+                if SHOW_COMPUTER_OUTPUT:
                     print(result)
-                    chat(model, messages, result, verbs)
-                else:
-                    method(response)
-            except:
-                result = f"C[omputer:]\nYou failed to perform:\n{a_verb[1:]}.\n==response==\n{response}\n==was invalid=="
+            except Exception as e:
+                error_message = traceback.format_exc()
+                result = f"[Computer:]\nERROR\n{error_message}\nYou failed to perform:\n{a_verb[1:]}.\n==response==\n{response}\n==was invalid=="
                 print(f"* Assistant failed to {a_verb[1:]} *")
+            finally:
+                chat(model, messages, result, verbs)
             break
     else:
         print(f"Assistant:{response}")
