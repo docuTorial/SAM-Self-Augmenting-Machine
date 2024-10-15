@@ -1,3 +1,45 @@
+It all works great for me!
+It can write simple programs!
+It can run simple programs!
+Right now, it does what it needs to do!
+This is amazing! A working bot!
+It should be made into a testable class and released.
+Also, the first video should be made.
+I made it. I made a bot that write code directly to the user's PC.
+
+Chat not really working :)
+Need to add logging example.
+
+
+
+I hopefully fixed some of the basic bugs.
+Will do some manual testing.
+Then, will fix the file writing bug.
+Upgrade code writing to have a requirement understanding phase.
+Also, upgrade code writing to default to a more powerful model.
+Release the first useful version of this package.
+Make this a class so that it can work with other code.
+
+
+Needs a lot of logging to debug properly...
+Also, should use something like o1-preview for coding.
+The coding needs to be better!
+Should put the verbs out of the main module.
+The main module should be small and easy to upgrade.
+
+
+Seems /chat is not working
+
+
+There is a bug in the chat... Checking
+
+
+It is pretty great now. There seems to be a bug! It did not write
+the test file correctly and then stopped.
+I need to add logging to everything. :)
+Will use the bot to modify itself and make a new version.
+
+
 Clearly, it has a problem with not speaking first now. :Definitely
 It wants to speak and then do something.
 I am inclined to allow this behavior...

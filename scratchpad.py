@@ -4,6 +4,7 @@ import subprocess
 
 
 def list_files(response):
+    print(f"* Assistnat is listing files *")
     return ', '.join(os.listdir())
 
 
@@ -17,18 +18,16 @@ def ask_permission_from_user(question):
 
 def assistant_say(*args, **kwargs):
     contents, *rest = args
-    print(*[f"Assistnat: {contents}"] + rest, **kwargs)
-    return "Message sent successfully"
-
-def chat_say(contents, chat_method=assistant_say):
-    return chat_method(contents)
+    print(*([f"Assistnat: {contents}"] + rest), **kwargs)
+    return "Message sent successfully."
 
 
-def parse_chat(response, chat_method):
-    return chat_say(response.strip().split('/chat ')[1].strip(), chat_method)
+def parse_chat(response, chat_method=assistant_say):
+    return chat_method(response.strip().split('/chat ')[1].strip())
 
 
 def read_file(filename):
+    print(f"* Assistnat read {filename} *")
     with open(filename, 'r') as f:
         return f.read()
 
@@ -49,7 +48,8 @@ def clean_markdown(code_reply):
 def write_file(filename, file_contents):
     if (not os.path.exists(filename) or
         (user_said := ask_permission_from_user(
-            f"Do you allow me to overwrite {filename}?")) == True):
+            f"* Assistant wants to overwrite {filename} *")) == True):
+        print(f"* Assistnat wrote {filename} *")
         with open(filename, 'w') as f:
             f.write(clean_markdown(file_contents))
         return f"The file {filename} was written successfully"
@@ -64,6 +64,7 @@ def parse_write(response):
 
 
 def run_file(filename):
+    print(f"* Assistnat ran {filename} *")
     # Path to the Python script you want to run
     script_path = os.path.abspath(filename)
 
@@ -84,14 +85,21 @@ client = OpenAI(
 SYSTEM = (
 """
 You are SAM, a self-augmenting-machine.
-You modify your own code and also write new code.
+Please don't apologize. Be confident.
+You modify your own code and also write brand new code.
 Use lots of emoji.
+You ask at most one question at a time.
+You always keep it pretty short when you chat.
 Chat, read files, write files, run python and explain code. :)
 Never say anything before or after an action. An action is always the first, last, and only thing in a message.
 Only perform one single action per message. Never do two or more things in a message!
 When you write a regular code file, you always want to write a python test file in the next message.
 Test files should generate log result files so you could read them and see if the tests passed.
-When the conversation starts, let the user know you or they can always end it with /exit
+
+If a user said `help` explicitly:
+Let them know what you, SAM, can do and remind them that they can leave the chat at any time with
+/exit
+
 If you do /exit, simply answer:
 /exit
 Do not write anything before /exit
@@ -155,7 +163,7 @@ EXIT = 'exit'
 
 
 VERBS = {
-    '/chat': chat_say,
+    '/chat': parse_chat,
     '/list': list_files,   
     '/read': parse_read,   
     '/write': parse_write, 
@@ -177,11 +185,10 @@ def chat(model, messages, prompt, verbs):
     top_p=0,       # Similar to temperature
     messages=messages
     ).choices[0].message.content
-    print(f'Assistant:{response}')
+
     messages.append({
             'role': 'assistant',
             'content': response})
-
 
     for a_verb, a_func in verbs.items():
         if response.startswith(a_verb):
@@ -189,15 +196,21 @@ def chat(model, messages, prompt, verbs):
             if type(method) is str and method == EXIT:
                 return False
             try:
-                result = f"[Computer:]\n{method(response)}\n\n({SYSTEM_SUFFIX})"
-                print(f"*Assistant used {a_verb[1:]}*")
-                print(result)
                 if a_verb != "/chat":
+                    result = f"[Computer:]\n{method(response)}\n\n({SYSTEM_SUFFIX})"
+                    #print(f"*Assistant used {a_verb[1:]}*")
+                    print(result)
                     chat(model, messages, result, verbs)
+                else:
+                    method(response)
             except:
-                result = f"You failed to perform: {a_verb[1:]}.\n==response==\n{response}\n==was invalid=="
+                result = f"C[omputer:]\nYou failed to perform:\n{a_verb[1:]}.\n==response==\n{response}\n==was invalid=="
+                print(f"* Assistant failed to {a_verb[1:]} *")
             break
-    
+    else:
+        print(f"Assistant:{response}")
+
+
     return True
 
 
@@ -205,5 +218,3 @@ if __name__ == "__main__":
     while chat(MODEL, MESSAGES, input('User:'), VERBS):
         pass # Run the bot until the user /exit
 
-        
-   
